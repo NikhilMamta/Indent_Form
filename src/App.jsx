@@ -1,5 +1,44 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import CustomSelect from "./utils/CustomSelect";
+
+// const generateIndentNumber = async () => {
+//   try {
+//     // Get the last indent number from the backend
+//     const response = await fetch(
+//       "https://script.google.com/macros/s/AKfycbyfmWBK4ikZUFM5u2nYm9sVG_IlTcNNnR0yI0tCWZmh6VPQVccvV6uxK6eWigljguo4Tg/exec?action=getLastIndentNumber"
+//     );
+//     const result = await response.json();
+
+//     if (result.success) {
+//       // Extract the numeric part and increment it
+//       const numericPart = result.lastIndentNumber.replace("IN-", "");
+//       const lastNumber = parseInt(numericPart, 10);
+
+//       if (isNaN(lastNumber)) {
+//         throw new Error("Invalid indent number format");
+//       }
+
+//       const newNumber = lastNumber + 1;
+
+//       // Format as IN-001, IN-002, etc.
+//       return `IN-${String(newNumber).padStart(3, "0")}`;
+//     } else {
+//       console.error("Error fetching last indent number:", result.error);
+//       // Fallback: use timestamp-based generation
+//       const date = new Date();
+//       const timestamp = date.getTime();
+//       const sequence = timestamp % 1000; // Use last 3 digits of timestamp
+//       return `IN-${String(sequence).padStart(3, "0")}`;
+//     }
+//   } catch (error) {
+//     console.error("Error generating indent number:", error);
+//     // Fallback: use timestamp-based generation
+//     const date = new Date();
+//     const timestamp = date.getTime();
+//     const sequence = timestamp % 1000; // Use last 3 digits of timestamp
+//     return `IN-${String(sequence).padStart(3, "0")}`;
+//   }
+// };
 
 function App() {
   const [medicines, setMedicines] = useState([]);
@@ -93,51 +132,23 @@ function App() {
     }
   };
 
-  // Handle investigation selection
-  const handleInvestigationChange = (type, investigation) => {
-    setSelectedInvestigations((prev) => {
-      const currentSelections = prev[type];
-      const isSelected = currentSelections.includes(investigation);
-
-      return {
-        ...prev,
-        [type]: isSelected
-          ? currentSelections.filter((item) => item !== investigation)
-          : [...currentSelections, investigation],
-      };
-    });
-  };
-
-  // Handle multi-select dropdown change for investigations
-  const handleInvestigationMultiChange = (type, e) => {
-    const values = Array.from(e.target.selectedOptions).map((o) => o.value);
-    setSelectedInvestigations((prev) => ({ ...prev, [type]: values }));
-  };
-
   // Handle medicine button click
   const handleMedicineButtonClick = () => {
-    console.log("🔵 Medicine button clicked!");
-    console.log("📋 Current form state:", formState);
-    console.log("💊 Current medicines:", medicines);
-    console.log("🔬 Selected investigations:", selectedInvestigations);
+    // console.log("🔵 Medicine button clicked!");
+    // console.log("📋 Current form state:", formState);
+    // console.log("💊 Current medicines:", medicines);
+    // console.log("🔬 Selected investigations:", selectedInvestigations);
 
     // Validate that form has required data
     if (!formState.patientName || !formState.admissionNumber) {
-      console.log(
-        "❌ Validation failed: Missing patient name or admission number"
-      );
       alert("Please fill in patient name and admission number first");
       return;
     }
     if (medicines.length === 0 || medicines.some((med) => !med.name)) {
-      console.log(
-        "❌ Validation failed: No medicines or incomplete medicine data"
-      );
       alert("Please add at least one medicine");
       return;
     }
 
-    console.log("✅ Validation passed, opening popup modal");
     setShowPopup(true);
   };
 
@@ -186,14 +197,6 @@ function App() {
   // Non-Package items list (like medicines): [{id, name, quantity}]
   const [nonPackageItems, setNonPackageItems] = useState([]);
 
-  const addPackageItem = () => {
-    setPackageItems((prev) => {
-      const nextId =
-        prev.length > 0 ? Math.max(...prev.map((p) => p.id)) + 1 : 1;
-      return [...prev, { id: nextId, name: "", quantity: 1 }];
-    });
-  };
-
   const removePackageItem = (id) => {
     setPackageItems((prev) => prev.filter((p) => p.id !== id));
   };
@@ -211,7 +214,7 @@ function App() {
         : 1;
     setInvestigations([
       ...investigations,
-      { id: newId, name: "", quantity: 1 },
+      { id: newId, name: "", quantity: "" },
     ]);
   };
 
@@ -227,14 +230,6 @@ function App() {
     );
   };
 
-  const addNonPackageItem = () => {
-    setNonPackageItems((prev) => {
-      const nextId =
-        prev.length > 0 ? Math.max(...prev.map((p) => p.id)) + 1 : 1;
-      return [...prev, { id: nextId, name: "", quantity: 1 }];
-    });
-  };
-
   const removeNonPackageItem = (id) => {
     setNonPackageItems((prev) => prev.filter((p) => p.id !== id));
   };
@@ -245,24 +240,24 @@ function App() {
     );
   };
 
-  // Generate indent number
-  const generateIndentNumber = () => {
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    const random = Math.floor(Math.random() * 1000)
-      .toString()
-      .padStart(3, "0");
-    return `IND-${year}${month}${day}-${random}`;
-  };
+  // const [indentNumber, setIndentNumber] = useState("");
 
-  const [indentNumber] = useState(generateIndentNumber());
+  const [indentNumber, setIndentNumber] = useState("Will be generated by server");
+
+  // useEffect(() => {
+  //   const initializeIndentNumber = async () => {
+  //     const newIndentNumber = await generateIndentNumber();
+  //     setIndentNumber(newIndentNumber);
+  //   };
+
+  //   initializeIndentNumber();
+  // }, []);
+  // const [indentNumber] = useState(generateIndentNumber());
 
   const addMedicine = () => {
     const newId =
       medicines.length > 0 ? Math.max(...medicines.map((m) => m.id)) + 1 : 1;
-    setMedicines([...medicines, { id: newId, name: "", quantity: 1 }]);
+    setMedicines([...medicines, { id: newId, name: "", quantity: "" }]);
   };
 
   const removeMedicine = (id) => {
@@ -290,7 +285,11 @@ function App() {
     }
   }, [requestTypes]);
 
-  const resetForm = () => {
+  const resetForm = async () => {
+    // setIndentNumber(generateIndentNumber());
+    // Generate a new indent number first
+    
+
     setFormState({
       admissionNumber: "",
       staffName: "",
@@ -313,66 +312,69 @@ function App() {
       nonPackage: false,
     });
     setActiveTab("medicines");
+
+    setSelectedStaff("");
+    setSelectedConsultant("");
+    setSelectedWardLocation("");
+    setSelectedAdmitionNumber("");
+    setSelectedInvestigations({
+      package: [],
+      nonPackage: [],
+    });
+    setPackageItems([]);
+    setNonPackageItems([]);
+
+    const newIndentNumber = await generateIndentNumber();
+    console.log("Generated new indent number:", newIndentNumber);
+    setIndentNumber(newIndentNumber);
   };
 
   // Handle form submission
   const handleSubmit = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
-    console.log("🚀 Form submission started!", formState);
 
     // Validate form
     if (!formState.admissionNumber) {
-      console.log("❌ Form validation failed: Missing admission number");
       alert("Please enter Admission Number");
       return;
     }
     if (!formState.staffName) {
-      console.log("❌ Form validation failed: Missing staff name");
       alert("Please select Staff Name");
       return;
     }
     if (!formState.consultantName) {
-      console.log("❌ Form validation failed: Missing consultant name");
       alert("Please select Consultant Name");
       return;
     }
     if (!formState.patientName) {
-      console.log("❌ Form validation failed: Missing patient name");
       alert("Please enter Patient Name");
       return;
     }
     if (!formState.uhidNumber) {
-      console.log("❌ Form validation failed: Missing UHID number");
       alert("Please enter UHID Number");
       return;
     }
     if (!formState.age) {
-      console.log("❌ Form validation failed: Missing age");
       alert("Please enter Age");
       return;
     }
     if (!formState.gender) {
-      console.log("❌ Form validation failed: Missing gender");
       alert("Please select Gender");
       return;
     }
     if (!formState.wardLocation) {
-      console.log("❌ Form validation failed: Missing ward location");
       alert("Please select Ward Location");
       return;
     }
     if (!formState.category) {
-      console.log("❌ Form validation failed: Missing category");
       alert("Please enter Category");
       return;
     }
     if (!formState.room) {
-      console.log("❌ Form validation failed: Missing room");
       alert("Please enter Room");
       return;
     }
     if (!formState.diagnosis) {
-      console.log("❌ Form validation failed: Missing diagnosis");
       alert("Please enter Diagnosis");
       return;
     }
@@ -380,8 +382,6 @@ function App() {
     // Check if at least one request type is selected
     const hasRequestType = Object.values(requestTypes).some((value) => value);
     if (!hasRequestType) {
-      console.log("❌ Form validation failed: No request type selected");
-      console.log("Request types:", requestTypes);
       alert("Please select at least one Request Type");
       return;
     }
@@ -399,27 +399,18 @@ function App() {
     const hasPrimaryRequestType =
       requestTypes.medicineSlip || requestTypes.investigation;
     if (!hasPrimaryRequestType) {
-      console.log(
-        "❌ Form validation failed: No primary request type selected"
-      );
       alert("Please select at least Medicine Slip or Investigation");
       return;
     }
 
     // Check if both primary types are selected (they should be mutually exclusive)
     if (requestTypes.medicineSlip && requestTypes.investigation) {
-      console.log(
-        "❌ Form validation failed: Cannot select both Medicine Slip and Investigation"
-      );
       alert("Please select only one of Medicine Slip or Investigation");
       return;
     }
 
     // Check if both package types are selected (they should be mutually exclusive)
     if (requestTypes.package && requestTypes.nonPackage) {
-      console.log(
-        "❌ Form validation failed: Cannot select both Package and Non-Package"
-      );
       alert("Please select only one of Package or Non-Package");
       return;
     }
@@ -430,8 +421,8 @@ function App() {
     //   return;
     // }
 
-    console.log("✅ All form validations passed!");
-    console.log("⏳ Starting form submission process...");
+    // console.log("✅ All form validations passed!");
+    // console.log("⏳ Starting form submission process...");
 
     // Set loading state
     setIsSubmitting(true);
@@ -452,7 +443,7 @@ function App() {
       // Prepare batch data
       const batchData = {
         timestamp: formattedTimestamp,
-        indentNumber: indentNumber, // serial number
+        indentNumber: "", // serial number
         admissionNumber: formState.admissionNumber || "",
         staffName: formState.staffName || "",
         consultantName: formState.consultantName || "",
@@ -474,7 +465,7 @@ function App() {
         // selectedInvestigations: selectedInvestigations
       };
 
-      console.log("📝 Batch data to submit:", batchData);
+      // console.log("📝 Batch data to submit:", batchData);
 
       // Send batch data to Google Sheets using your existing endpoint
       const formData = {
@@ -496,14 +487,20 @@ function App() {
 
       const result = await response.json();
 
-      if (result.success) {
-        console.log("✅ Batch form submitted successfully to Google Sheets!");
-        setIsSubmitting(false);
-        setShowSubmitSuccess(true);
-        resetForm();
-      } else {
-        throw new Error(result.error || "Unknown error");
-      }
+     // जहाँ response handle कर रहे हैं, वहाँ change करें:
+if (result.success) {
+  console.log("✅ Batch form submitted successfully to Google Sheets!");
+  
+  // Server से generated indent number को state में set करें
+  if (result.indentNumber) {
+    setIndentNumber(result.indentNumber);
+  }
+  
+  setIsSubmitting(false);
+  setShowSubmitSuccess(true);
+} else {
+  throw new Error(result.error || "Unknown error");
+}
     } catch (error) {
       console.error("❌ Error submitting form to Google Sheets:", error);
       setIsSubmitting(false);
@@ -514,126 +511,233 @@ function App() {
   // With this single state:
   const [pharmacyData, setPharmacyData] = useState({});
   const [masterData, setMasterData] = useState({});
-  
+
   const [selectedInvestigation, setSelectedInvestigation] = useState("");
 
   // Add these states for selected values
   const [selectedStaff, setSelectedStaff] = useState("");
-  const [selectedMedicine, setSelectedMedicine] = useState("");
   const [selectedConsultant, setSelectedConsultant] = useState("");
   const [selectedWardLocation, setSelectedWardLocation] = useState("");
   const [selectedAdmitionNumber, setSelectedAdmitionNumber] = useState("");
 
   const [staffSearch, setStaffSearch] = useState("");
   const [showStaffDropdown, setShowStaffDropdown] = useState(false);
-  const [brokerRateMap, setBrokerRateMap] = useState({});
-  const [filteredBrokers, setFilteredBrokers] = useState([]);
-  const [globalFilteredRates, setGlobalFilteredRates] = useState([]);
 
   const [pharmacyLoading, setPharmacyLoading] = useState(false);
+  const [pharmacyCurrentPage, setPharmacyCurrentPage] = useState(1);
+  const [pharmacyHasMore, setPharmacyHasMore] = useState(true);
+  const pharmacyPageSize = 1000; // Number of records per page
 
-  const fetchPharmacySheet = async () => {
-    console.log("Ram");
+  // console.log("pharmacyData", pharmacyData);
 
-    setPharmacyLoading(true);
-    try {
-      const response = await fetch(
-        `https://script.google.com/macros/s/AKfycbyfmWBK4ikZUFM5u2nYm9sVG_IlTcNNnR0yI0tCWZmh6VPQVccvV6uxK6eWigljguo4Tg/exec?sheet=Admission%20Data`
-      );
-      const result = await response.json();
+  const fetchPharmacySheet = useCallback(
+    async (page = 1) => {
+      // console.log("Fetching pharmacy page:", page);
 
-      console.log("result", result);
+      setPharmacyLoading(true);
+      try {
+        const response = await fetch(
+          `https://script.google.com/macros/s/AKfycbyfmWBK4ikZUFM5u2nYm9sVG_IlTcNNnR0yI0tCWZmh6VPQVccvV6uxK6eWigljguo4Tg/exec?sheet=Admission%20Data&page=${page}&pageSize=${pharmacyPageSize}`
+        );
+        const result = await response.json();
 
-      if (result.success && result.data && result.data.length > 0) {
-        const headers = result.data[0];
-        const structuredData = {};
+        // console.log("Pharmacy API Response:", result);
 
-        headers.forEach((header) => {
-          structuredData[header] = [];
-        });
+        if (result.success && result.data && result.data.length > 0) {
+          const headers = result.data[0];
+          const newData = {};
+          const rowCount = result.data.length - 1; // Number of data rows
 
-        result.data.slice(1).forEach((row) => {
-          row.forEach((value, index) => {
-            const header = headers[index];
-            if (value !== null && value !== undefined) {
-              const stringValue = String(value).trim();
-              if (stringValue !== "") {
-                structuredData[header].push(stringValue);
-              }
-            }
+          // Initialize each header with empty array of correct size
+          headers.forEach((header) => {
+            newData[header] = Array(rowCount).fill("");
           });
-        });
 
-        // Remove duplicates from each array
-        Object.keys(structuredData).forEach((key) => {
-          structuredData[key] = [...new Set(structuredData[key])];
-        });
+          // Process each row and column properly
+          result.data.slice(1).forEach((row, rowIndex) => {
+            headers.forEach((header, colIndex) => {
+              if (colIndex < row.length) {
+                const value = row[colIndex];
+                if (value !== null && value !== undefined) {
+                  const stringValue = String(value).trim();
+                  newData[header][rowIndex] = stringValue;
+                }
+                // else remains as empty string (already filled)
+              }
+              // else remains as empty string (already filled)
+            });
+          });
 
-        console.log("Structured Master Data:", structuredData);
-        setPharmacyData(structuredData);
+          // console.log("Processed new data with equal array sizes:", newData);
+
+          // Merge with existing data
+          setPharmacyData((prevData) => {
+            // If first page, replace all data
+            if (page === 1) {
+              return newData;
+            }
+
+            // For subsequent pages, merge with existing data
+            const mergedData = { ...prevData };
+
+            Object.keys(newData).forEach((key) => {
+              if (mergedData[key]) {
+                mergedData[key] = [...mergedData[key], ...newData[key]];
+              } else {
+                mergedData[key] = newData[key];
+              }
+            });
+
+            return mergedData;
+          });
+
+          // Check if there's more data to load
+          setPharmacyHasMore(result.pagination?.hasMore || false);
+        }
+      } catch (error) {
+        console.error("Error fetching pharmacy data:", error);
+      } finally {
+        setPharmacyLoading(false);
       }
-    } catch (error) {
-      console.error("Error fetching master data:", error);
-      // You might want to add toast.error("Failed to load master data"); if you have toast setup
-    } finally {
-      setPharmacyLoading(false);
+    },
+    [pharmacyPageSize]
+  );
+
+  const handlePharmacyScroll = useCallback(() => {
+    if (pharmacyLoading || !pharmacyHasMore) return;
+
+    const scrollTop =
+      document.documentElement.scrollTop || document.body.scrollTop;
+    const scrollHeight =
+      document.documentElement.scrollHeight || document.body.scrollHeight;
+    const clientHeight =
+      document.documentElement.clientHeight || window.innerHeight;
+
+    // Load more data when user is near the bottom
+    if (scrollTop + clientHeight >= scrollHeight - 100) {
+      setPharmacyCurrentPage((prevPage) => {
+        const nextPage = prevPage + 1;
+        fetchPharmacySheet(nextPage);
+        return nextPage;
+      });
     }
-  };
+  }, [pharmacyLoading, pharmacyHasMore, fetchPharmacySheet]);
 
+  // Initial pharmacy data load
+  useEffect(() => {
+    fetchPharmacySheet(1);
+  }, [fetchPharmacySheet]);
 
+  // Add scroll event listener for pharmacy data
+  useEffect(() => {
+    window.addEventListener("scroll", handlePharmacyScroll);
+    return () => window.removeEventListener("scroll", handlePharmacyScroll);
+  }, [handlePharmacyScroll]);
+
+  // console.log("masterDAta", masterData);
 
   const [ladingMaster, setLoadingMaster] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const pageSize = 1000; // Number of records per page
 
-  const fetchMasterSheet = async () => {
-    console.log("Ram");
+  const fetchMasterSheet = useCallback(
+    async (page = 1) => {
+      // console.log("Fetching page:", page);
 
-    setLoadingMaster(true);
-    try {
-      const response = await fetch(
-        `https://script.google.com/macros/s/AKfycbx_ffGXIZelQ3qCR_QuWT1hhQ3UZwjUjgl4Gnb3GpxcAHuUj206Kw3iGZV_qfCmmKk/exec?sheet=Pharmacy's%20Details`
-      );
-      const result = await response.json();
+      setLoadingMaster(true);
+      try {
+        const response = await fetch(
+          `https://script.google.com/macros/s/AKfycbx_ffGXIZelQ3qCR_QuWT1hhQ3UZwjUjgl4Gnb3GpxcAHuUj206Kw3iGZV_qfCmmKk/exec?sheet=Pharmacy's%20Details&page=${page}&pageSize=${pageSize}`
+        );
+        const result = await response.json();
 
-      console.log("result", result);
+        // console.log("API Response:", result);
 
-      if (result.success && result.data && result.data.length > 0) {
-        const headers = result.data[0];
-        const structuredData = {};
+        if (result.success && result.data && result.data.length > 0) {
+          const headers = result.data[0];
+          const newData = {};
 
-        headers.forEach((header) => {
-          structuredData[header] = [];
-        });
-
-        result.data.slice(1).forEach((row) => {
-          row.forEach((value, index) => {
-            const header = headers[index];
-            if (value !== null && value !== undefined) {
-              const stringValue = String(value).trim();
-              if (stringValue !== "") {
-                structuredData[header].push(stringValue);
-              }
-            }
+          // Initialize each header with empty array
+          headers.forEach((header) => {
+            newData[header] = [];
           });
-        });
 
-        // Remove duplicates from each array
-        Object.keys(structuredData).forEach((key) => {
-          structuredData[key] = [...new Set(structuredData[key])];
-        });
+          // Process data rows (skip header row)
+          result.data.slice(1).forEach((row) => {
+            row.forEach((value, index) => {
+              const header = headers[index];
+              if (value !== null && value !== undefined) {
+                const stringValue = String(value).trim();
+                if (stringValue !== "") {
+                  newData[header].push(stringValue);
+                }
+              }
+            });
+          });
 
-        console.log("Structured Master Data:", structuredData);
-        setMasterData(structuredData);
+          // Remove duplicates and merge with existing data
+          setMasterData((prevData) => {
+            const mergedData = { ...prevData };
+
+            Object.keys(newData).forEach((key) => {
+              if (mergedData[key]) {
+                // Merge and remove duplicates
+                const combined = [...mergedData[key], ...newData[key]];
+                mergedData[key] = [...new Set(combined)];
+              } else {
+                mergedData[key] = newData[key];
+              }
+            });
+
+            return mergedData;
+          });
+
+          // Check if there's more data to load
+          setHasMore(result.pagination?.hasMore || false);
+        }
+      } catch (error) {
+        console.error("Error fetching master data:", error);
+      } finally {
+        setLoadingMaster(false);
       }
-    } catch (error) {
-      console.error("Error fetching master data:", error);
-      // You might want to add toast.error("Failed to load master data"); if you have toast setup
-    } finally {
-      setLoadingMaster(false);
+    },
+    [pageSize]
+  );
+
+  // Load more data when scrolling
+  const handleScroll = useCallback(() => {
+    if (ladingMaster || !hasMore) return;
+
+    const scrollTop =
+      document.documentElement.scrollTop || document.body.scrollTop;
+    const scrollHeight =
+      document.documentElement.scrollHeight || document.body.scrollHeight;
+    const clientHeight =
+      document.documentElement.clientHeight || window.innerHeight;
+
+    // Load more data when user is near the bottom
+    if (scrollTop + clientHeight >= scrollHeight - 100) {
+      setCurrentPage((prevPage) => {
+        const nextPage = prevPage + 1;
+        fetchMasterSheet(nextPage);
+        return nextPage;
+      });
     }
-  };
+  }, [ladingMaster, hasMore, fetchMasterSheet]);
+
+  // Initial data load
+  useEffect(() => {
+    fetchMasterSheet(1);
+  }, [fetchMasterSheet]);
+
+  // Add scroll event listener
+  useEffect(() => {
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [handleScroll]);
 
   useEffect(() => {
-    fetchMasterSheet();
     fetchPharmacySheet();
   }, []);
 
@@ -658,36 +762,6 @@ function App() {
       diagnosis: pharmacyData["Admission Purpose"]?.[admissionIndex] || "",
     };
   };
-
-  // Handle global staff selection
-  const handleGlobalStaffName = (staff) => {
-    setSelectedStaff(staff); // Store the selected staff
-    setFormState({ ...formState, staffName: staff }); // Add this line
-    setStaffSearch("");
-    setShowStaffDropdown(false);
-  };
-
-  // Handle global medicine selection
-  const handleGlobalMedicineName = (medicine) => {
-    setSelectedMedicine(medicine);
-  };
-
-  // Handle global consultant selection
-  const handleGlobalConsultantName = (consultant) => {
-    setFormState({ ...formState, consultantName: consultant }); // Add this
-    setSelectedConsultant(consultant);
-  };
-
-  // Handle global ward location selection
-  const handleGlobalWardLocation = (wardLocation) => {
-    setFormState({ ...formState, wardLocation: wardLocation }); // Add this
-    setSelectedWardLocation(wardLocation);
-  };
-
-  // const handleGlobalAdmitionNumber = (admitionNumber) => {
-  //    setFormState({ ...formState, admissionNumber: admitionNumber }); // Add this
-  //   setSelectedAdmitionNumber(admitionNumber);
-  // };
 
   const handleGlobalAdmitionNumber = (admissionNumber) => {
     setFormState({ ...formState, admissionNumber: admissionNumber });
@@ -793,10 +867,11 @@ function App() {
                   <CustomSelect
                     placeholder="Search or select admission number..."
                     value={selectedAdmitionNumber || undefined}
-                    loader = {pharmacyLoading}
+                    loader={pharmacyLoading}
                     onChange={handleGlobalAdmitionNumber}
                     options={pharmacyData["Registration Number"] || []}
                     className="w-full"
+                    pageSize={1000}
                   />
                 </div>
                 <div className="group">
@@ -810,13 +885,14 @@ function App() {
                   <CustomSelect
                     placeholder="Search or select staff..."
                     value={selectedStaff || undefined}
-                    loader = {ladingMaster}
+                    loader={ladingMaster}
                     onChange={(selectedStaff) => {
                       setSelectedStaff(selectedStaff);
                       setFormState({ ...formState, staffName: selectedStaff });
                     }}
                     options={masterData["Staff Name"] || []}
                     className="w-full"
+                    pageSize={1000} // Add this prop
                   />
                 </div>
                 <div className="group">
@@ -830,7 +906,7 @@ function App() {
                   <CustomSelect
                     placeholder="Search or select consultant..."
                     value={selectedConsultant || undefined}
-                    loader = {ladingMaster}
+                    loader={ladingMaster}
                     onChange={(selectedConsultant) => {
                       setFormState({
                         ...formState,
@@ -840,6 +916,7 @@ function App() {
                     }}
                     options={masterData["Consultant Name"] || []}
                     className="w-full"
+                    pageSize={1000} // Add this prop
                   />
                 </div>
 
@@ -930,7 +1007,7 @@ function App() {
                   <CustomSelect
                     placeholder="Search or select ward location..."
                     value={selectedWardLocation || undefined}
-                    loader = {pharmacyLoading}
+                    loader={pharmacyLoading}
                     onChange={(selectedWardLocation) => {
                       setFormState({
                         ...formState,
@@ -938,8 +1015,9 @@ function App() {
                       });
                       setSelectedWardLocation(selectedWardLocation);
                     }}
-                    options={pharmacyData["Ward No."] || []}
+                    options={masterData["Wards"] || []}
                     className="w-full"
+                    pageSize={1000}
                   />
                 </div>
               </div>
@@ -953,7 +1031,7 @@ function App() {
                   >
                     Category <span className="text-rose-500">*</span>
                   </label>
-                  <div className="relative">
+                  {/* <div className="relative">
                     <input
                       type="text"
                       id="category"
@@ -981,7 +1059,22 @@ function App() {
                         />
                       </svg>
                     </button>
-                  </div>
+                  </div> */}
+
+                  <CustomSelect
+                    placeholder="Search or select category..."
+                    value={formState.category || undefined}
+                    loader={ladingMaster}
+                    onChange={(selectedCategory) => {
+                      setFormState({
+                        ...formState,
+                        category: selectedCategory,
+                      });
+                    }}
+                    options={masterData["Category"] || []}
+                    className="w-full"
+                    pageSize={1000}
+                  />
                 </div>
                 <div className="group">
                   <label
@@ -990,14 +1083,20 @@ function App() {
                   >
                     Room <span className="text-rose-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    id="room"
-                    name="room"
-                    value={formState.room}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-200 focus:border-emerald-400 transition-all duration-300 font-medium"
-                  />
+                  <CustomSelect
+      placeholder="Search or select room..."
+      value={formState.room || undefined}
+      loader={ladingMaster}
+      onChange={(selectedRoom) => {
+        setFormState({
+          ...formState,
+          room: selectedRoom,
+        });
+      }}
+      options={masterData["Floor"] || []}
+      className="w-full"
+      pageSize={1000}
+    />
                 </div>
 
                 <div className="group">
@@ -1258,8 +1357,6 @@ function App() {
                 </div>
               )}
 
-              
-
               {activeTab === "investigations" && requestTypes.investigation && (
                 <div className="mt-6">
                   <div className="flex justify-between items-center mb-4">
@@ -1286,10 +1383,11 @@ function App() {
                               Investigation Name{" "}
                               <span className="text-rose-500">*</span>
                             </label>
+
                             <CustomSelect
                               placeholder="Search or select investigation..."
                               value={investigation.name || undefined}
-                              loader = {ladingMaster}
+                              loader={ladingMaster}
                               onChange={(selectedValue) =>
                                 updateInvestigation(
                                   investigation.id,
@@ -1299,6 +1397,7 @@ function App() {
                               }
                               options={masterData["Investigation Name"] || []}
                               className="w-full"
+                              pageSize={1000} // Add this prop
                             />
                           </div>
                           <div className="md:col-span-2">
@@ -1313,7 +1412,7 @@ function App() {
                                 updateInvestigation(
                                   investigation.id,
                                   "quantity",
-                                  parseInt(e.target.value) || 1
+                                  e.target.value
                                 )
                               }
                               className="w-full px-3 py-2 bg-white border border-green-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-200 focus:border-green-400 transition-all duration-200 text-center text-sm font-medium shadow-sm"
@@ -1602,12 +1701,13 @@ function App() {
                           <CustomSelect
                             placeholder="Search or select medicine..."
                             value={medicine.name || undefined}
-                            loader = {ladingMaster}
+                            loader={ladingMaster}
                             onChange={(selectedValue) =>
                               updateMedicine(medicine.id, "name", selectedValue)
                             }
                             options={masterData["Medicine Name"] || []}
                             className="w-full"
+                            pageSize={1000} // Add this prop
                           />
                         </div>
                         <div className="md:col-span-2">
@@ -1627,7 +1727,7 @@ function App() {
                               updateMedicine(
                                 medicine.id,
                                 "quantity",
-                                parseInt(e.target.value) || 1
+                                e.target.value
                               )
                             }
                             className="w-full px-3 py-2 bg-white border border-green-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-200 focus:border-green-400 transition-all duration-200 text-center text-sm font-medium shadow-sm"
@@ -1966,16 +2066,16 @@ function App() {
                 </button>
                 <button
                   onClick={() => {
-                    console.log("🎯 Submit Indent button clicked from popup!");
-                    console.log("📊 Final submission data:", {
-                      indentNumber,
-                      formState,
-                      medicines: medicines.filter((med) => med.name),
-                      selectedInvestigations,
-                      requestTypes,
-                    });
+                    // console.log("🎯 Submit Indent button clicked from popup!");
+                    // console.log("📊 Final submission data:", {
+                    //   indentNumber,
+                    //   formState,
+                    //   medicines: medicines.filter((med) => med.name),
+                    //   selectedInvestigations,
+                    //   requestTypes,
+                    // });
                     alert("Indent submitted successfully!");
-                    console.log("✅ Indent submission completed!");
+                    // console.log("✅ Indent submission completed!");
                     setShowPopup(false);
                   }}
                   className="px-6 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg hover:from-indigo-600 hover:to-purple-600 transition-all duration-300"
@@ -2018,8 +2118,10 @@ function App() {
               <div className="flex justify-end">
                 <button
                   onClick={() => {
-                    console.log("✅ Success modal closed");
+                    // console.log("✅ Success modal closed");
                     setShowSubmitSuccess(false);
+
+                    resetForm();
                   }}
                   className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors"
                 >
@@ -2031,7 +2133,7 @@ function App() {
         </div>
       )}
     </div>
-  )
+  );
 }
 
 export default App;
