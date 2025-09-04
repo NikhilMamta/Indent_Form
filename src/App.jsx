@@ -537,7 +537,7 @@ if (result.success) {
       setPharmacyLoading(true);
       try {
         const response = await fetch(
-          `https://script.google.com/macros/s/AKfycbyfmWBK4ikZUFM5u2nYm9sVG_IlTcNNnR0yI0tCWZmh6VPQVccvV6uxK6eWigljguo4Tg/exec?sheet=Admission%20Data&page=${page}&pageSize=${pharmacyPageSize}`
+          `https://script.google.com/macros/s/AKfycbyfmWBK4ikZUFM5u2nYm9sVG_IlTcNNnR0yI0tCWZmh6VPQVccvV6uxK6eWigljguo4Tg/exec?sheet=Admission%20Data&action=fetch`
         );
         const result = await response.json();
 
@@ -602,6 +602,8 @@ if (result.success) {
     },
     [pharmacyPageSize]
   );
+
+  console.log("pharmacyData", pharmacyData);
 
   const handlePharmacyScroll = useCallback(() => {
     if (pharmacyLoading || !pharmacyHasMore) return;
